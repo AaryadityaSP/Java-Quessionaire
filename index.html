@@ -102,10 +102,24 @@
                     Attempt Incorrect Questions Again
                 </button>
                 <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="viewAnswers()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-3 px-6 rounded-xl transition duration-200">
+                        Review Answers
+                    </button>
                     <button onclick="resetToHome()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg shadow-indigo-600/30">
                         Back to Sets
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Review Screen -->
+        <div id="review-screen" class="hidden space-y-4">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xl font-bold">Answer Review</h2>
+                <button onclick="resetToHome()" class="text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl border border-slate-700 transition">Back to Home</button>
+            </div>
+            <div id="review-container" class="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
+                <!-- Dynamic Review Items Here -->
             </div>
         </div>
 
@@ -118,15 +132,14 @@
 
     <script>
         // ==========================================
-        // EXACT PDF QUESTION BANKS (Mapped to exact answer strings for shuffling)
+        // EXACT PDF QUESTION BANKS 
         // ==========================================
-        
         const setsData = {
             set2025: [
                 { question: "Which of the following is true?", options: ["Java uses only interpreter.", "Java uses only compiler.", "Java uses both interpreter and compiler.", "None of the above."], answerText: "Java uses both interpreter and compiler." },
                 { question: "A Java file with extension '.class' contains", options: ["Java source code", "HTML tags", "Java Byte code", "A program file written in Java programming language"], answerText: "Java Byte code" },
                 { question: "Which of the following is not an object-oriented programming paradigm?", options: ["Encapsulation", "Inheritance", "Polymorphism", "Dynamic memory allocation"], answerText: "Dynamic memory allocation" },
-                { question: "Java is a platform independent programming language because", options: ["It compiles an intermediate code targeting a virtual machine, which can be interpreted by an interpreter for a given OS.", "The Java compiler translates the source code directly into the machine-level language.", "It follows the concept of \"write once and compile everywhere\".", "It is written almost similar to the English language."], answerText: "It compiles an intermediate code targeting a virtual machine, which can be interpreted by an interpreter for a given OS." },
+                { question: "Java is a platform independent programming language because", options: ["It compiles an intermediate code targeting a virtual machine, which can be interpreted by an interpreter for a given OS.", "The Java compiler translates the source code directly into the machine-level language.", "It follows the concept of 'write once and compile everywhere'.", "It is written almost similar to the English language."], answerText: "It compiles an intermediate code targeting a virtual machine, which can be interpreted by an interpreter for a given OS." },
                 { question: "Which of the following is not a Language Processor?", options: ["Assembler", "Compiler", "Interpreter", "Fortran"], answerText: "Fortran" },
                 { question: "What is the correct sequence of steps to execute a Java program?", options: ["Run -> Edit -> Compile", "Edit -> Run -> Compile", "Compile -> Edit -> Run", "Edit -> Compile -> Run"], answerText: "Edit -> Compile -> Run" },
                 { question: "What is the primary difference between javac and java commands?", options: ["javac is used to edit Java code, while java runs Java programs.", "javac compiles Java source code to bytecode, while java executes the bytecode on the JVM.", "javac executes Java programs, while java is used for compilation.", "Both are used for compiling Java programs."], answerText: "javac compiles Java source code to bytecode, while java executes the bytecode on the JVM." },
@@ -137,14 +150,14 @@
             set2026: [
                 { question: "Which of the following is true regarding how Java handles code execution?", options: ["Java uses only interpreter.", "Java uses only compiler.", "Java uses both interpreter and compiler.", "None of the above."], answerText: "Java uses both interpreter and compiler." },
                 { question: "A Java file with extension '.class' contains:", options: ["Java source code", "HTML tags", "Java Byte code", "A program file written in Java programming language"], answerText: "Java Byte code" },
-                { question: "Which of the following is NOT an object-oriented programming paradigm?", options: ["Encapsulation", "Inheritance", "Polymorphism", "Dynamic memory allocation"], answerText: "Dynamic memory allocation" },
                 { question: "Which program is used to compile Java source code into bytecode?", options: ["javap", "javac", "java", "javad"], answerText: "javac" },
                 { question: "In Java, what is the role of the public static void main(String[] args) method?", options: ["Initialization method", "Execution entry point", "Constructor", "Destructor"], answerText: "Execution entry point" },
                 { question: "What is the primary purpose of the Java Virtual Machine (JVM) in the Java programming language?", options: ["Graphical User Interface", "Platform independence", "Code Debugging", "Game Engine"], answerText: "Platform independence" },
                 { question: "How do you read a line of text from the console using the Scanner class in Java?", options: ["scanner.readLine()", "scanner.nextLine()", "scanner.getLine()", "scanner.fetchLine()"], answerText: "scanner.nextLine()" },
                 { question: "Which keyword is used in Java to refer to the current object?", options: ["this", "that", "self", "current"], answerText: "this" },
                 { question: "Which method is used as the starting point of execution in a Java program?", options: ["init method", "start method", "main method", "run method"], answerText: "main method" },
-                { question: "Which symbol is used to end a statement in Java?", options: [":", ".", ";", ","], answerText: ";" }
+                { question: "Which symbol is used to end a statement in Java?", options: [":", ".", ";", ","], answerText: ";" },
+                { question: "Which of the following is the correct way to declare a class in Java?", options: ["public class MyClass {}", "class MyClass[] {}", "public MyClass class {}", "MyClass public class {}"], answerText: "public class MyClass {}" }
             ],
             setMerged: [
                 { question: "Which of the following is NOT an object-oriented programming paradigm?", options: ["Encapsulation", "Inheritance", "Polymorphism", "Dynamic memory allocation"], answerText: "Dynamic memory allocation" },
@@ -161,18 +174,19 @@
         };
 
         // State Variables
-        let currentSetData = [];     // Active questions (full set or just incorrect ones)
-        let incorrectQuestions = []; // Tracks mistakes during the current run
+        let currentSetData = [];     
+        let incorrectQuestions = []; 
+        let userAnswers = [];        
         let currentQuestionIndex = 0;
         let score = 0;
         let isSubmitted = false;
-        let currentShuffledOptions = []; // Holds the jumbled options for the current UI
         let currentActiveSetName = "";
 
         // DOM Elements
         const homeScreen = document.getElementById('home-screen');
         const quizScreen = document.getElementById('quiz-screen');
         const resultScreen = document.getElementById('result-screen');
+        const reviewScreen = document.getElementById('review-screen');
         
         const questionText = document.getElementById('question-text');
         const optionsContainer = document.getElementById('options-container');
@@ -183,7 +197,7 @@
         const feedbackBanner = document.getElementById('feedback-banner');
         const retryIncorrectBtn = document.getElementById('retry-incorrect-btn');
 
-        // Fisher-Yates Shuffle Algorithm for Jumbling Options
+        // Fisher-Yates Shuffle Algorithm
         function shuffleArray(array) {
             let shuffled = array.slice();
             for (let i = shuffled.length - 1; i > 0; i--) {
@@ -193,29 +207,29 @@
             return shuffled;
         }
 
-        // Initialize a Set
         function selectSet(setName) {
             currentActiveSetName = setName;
             currentSetData = [...setsData[setName]];
             startQuiz();
         }
 
-        // Start/Restart Quiz Loop
         function startQuiz() {
             currentQuestionIndex = 0;
             score = 0;
             incorrectQuestions = [];
+            userAnswers = [];
             
             homeScreen.classList.add('hidden');
             resultScreen.classList.add('hidden');
+            reviewScreen.classList.add('hidden');
             quizScreen.classList.remove('hidden');
             progressText.classList.remove('hidden');
             
             loadQuestion();
         }
 
-        // Attempt strictly incorrect questions
         function retryIncorrect() {
+            // Re-attempt only the incorrect questions from the last run
             currentSetData = [...incorrectQuestions];
             startQuiz();
         }
@@ -234,11 +248,11 @@
             progressBar.style.width = `${progressPercent}%`;
             progressText.textContent = `Q ${currentQuestionIndex + 1}/${currentSetData.length}`;
 
-            // Jumble options by places
-            currentShuffledOptions = shuffleArray(q.options);
+            // Jumble options
+            const shuffledOptions = shuffleArray(q.options);
 
             optionsContainer.innerHTML = '';
-            currentShuffledOptions.forEach((optText, index) => {
+            shuffledOptions.forEach((optText) => {
                 const button = document.createElement('button');
                 button.className = "w-full text-left p-4 rounded-xl border border-slate-700/70 bg-slate-800/40 hover:bg-slate-700/50 hover:border-slate-600 transition duration-200 text-slate-200 text-sm sm:text-base flex items-center justify-between group option-btn";
                 button.innerHTML = `<span>${optText}</span><span class="w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center text-xs group-hover:border-indigo-400"></span>`;
@@ -253,15 +267,4 @@
             
             const buttons = document.querySelectorAll('.option-btn');
             buttons.forEach(btn => {
-                btn.className = "w-full text-left p-4 rounded-xl border border-slate-700/70 bg-slate-800/40 hover:bg-slate-700/50 hover:border-slate-600 transition duration-200 text-slate-200 text-sm sm:text-base flex items-center justify-between group option-btn";
-                btn.classList.remove('selected');
-            });
-            
-            selectedElement.className = "w-full text-left p-4 rounded-xl border border-indigo-500 bg-indigo-600/10 text-indigo-200 text-sm sm:text-base flex items-center justify-between shadow-md option-btn selected";
-            actionBtn.disabled = false;
-        }
-
-        function handleAction() {
-            if (!isSubmitted) {
-                // Check Answer Phase
-                cons
+  
