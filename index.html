@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NPTEL Java PYQ Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="w-full border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="bg-indigo-600 text-white p-2 rounded-xl font-bold text-lg">📚</div>
+                <span id="header-title" class="font-bold text-lg tracking-tight">Java PYQ Portal</span>
+            </div>
+            <div id="quiz-progress-text" class="text-sm font-medium text-slate-400 hidden">Q 1/120</div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
+
+        <!-- Dashboard / Set Selection Screen -->
+        <div id="home-screen" class="space-y-6">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl sm:text-3xl font-bold mb-3 tracking-tight">Select a PYQ Set</h1>
+                <p class="text-slate-400 text-sm sm:text-base">Options are shuffled automatically. You can re-attempt incorrect questions at the end.</p>
+            </div>
+            
+            <div class="grid gap-4">
+                <button onclick="selectSet('set2025')" class="w-full text-left p-5 rounded-2xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 hover:border-indigo-500/50 transition duration-200 group flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-lg text-slate-100 group-hover:text-indigo-400 transition">2025 NPTEL Java Set</div>
+                        <div class="text-sm text-slate-400 mt-1">Official assignments from Jan 2025</div>
+                    </div>
+                    <div class="text-2xl">▶</div>
+                </button>
+
+                <button onclick="selectSet('set2026')" class="w-full text-left p-5 rounded-2xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 hover:border-indigo-500/50 transition duration-200 group flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-lg text-slate-100 group-hover:text-indigo-400 transition">2026 NPTEL Java Set</div>
+                        <div class="text-sm text-slate-400 mt-1">Official assignments from Jan 2026</div>
+                    </div>
+                    <div class="text-2xl">▶</div>
+                </button>
+
+                <button onclick="selectSet('setMerged')" class="w-full text-left p-5 rounded-2xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 hover:border-indigo-500/50 transition duration-200 group flex items-center justify-between">
+                    <div>
+                        <div class="font-bold text-lg text-slate-100 group-hover:text-indigo-400 transition">Java 7 to 12 Merged Set</div>
+                        <div class="text-sm text-slate-400 mt-1">Merged question bank (Jul 2026)</div>
+                    </div>
+                    <div class="text-2xl">▶</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden">
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-800 h-2 rounded-full mb-6 overflow-hidden border border-slate-700/50">
+                <div id="progress-bar" class="bg-indigo-500 h-full transition-all duration-300 w-0"></div>
+            </div>
+
+            <div class="bg-slate-800/50 border border-slate-700/60 rounded-2xl p-5 sm:p-7 shadow-xl">
+                <h2 id="question-text" class="text-lg sm:text-xl font-semibold mb-6 text-slate-100 leading-snug"></h2>
+                
+                <div id="options-container" class="space-y-3">
+                    <!-- Dynamic Options Inserted Here -->
+                </div>
+
+                <!-- Feedback Banner -->
+                <div id="feedback-banner" class="mt-4 p-3 rounded-xl text-sm font-medium hidden"></div>
+
+                <div class="mt-8 flex justify-between items-center">
+                    <span id="score-counter" class="text-xs sm:text-sm font-medium text-slate-400">Score: 0</span>
+                    <button id="action-btn" onclick="handleAction()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-6 rounded-xl transition duration-200 shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        Submit Answer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden bg-slate-800/50 border border-slate-700/60 rounded-2xl p-6 sm:p-8 shadow-xl text-center">
+            <div class="inline-flex bg-emerald-500/10 text-emerald-400 p-3 rounded-2xl mb-4 text-3xl">🏆</div>
+            <h2 class="text-2xl sm:text-3xl font-bold mb-2">Set Completed!</h2>
+            <p class="text-slate-400 text-sm mb-6">Here is a breakdown of your performance.</p>
+            
+            <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 mb-6">
+                <div id="final-score" class="text-4xl font-extrabold text-indigo-400 mb-1">0/0</div>
+                <div id="score-percentage" class="text-sm text-slate-400 font-medium">Percentage: 0%</div>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button id="retry-incorrect-btn" onclick="retryIncorrect()" class="hidden w-full bg-rose-600 hover:bg-rose-500 text-white font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg shadow-rose-600/30">
+                    Attempt Incorrect Questions Again
+                </button>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="resetToHome()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg shadow-indigo-600/30">
+                        Back to Sets
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-6 text-xs text-slate-500 border-t border-slate-800">
+        NPTEL Java PYQ Portal &copy; 2026
+    </footer>
+
+    <script>
+        // ==========================================
+        // EXACT PDF QUESTION BANKS (Mapped to exact answer strings for shuffling)
+        // ==========================================
+        
+        const setsData = {
+            set2025: [
+                { question: "Which of the following is true?", options: ["Java uses only interpreter.", "Java uses only compiler.", "Java uses both interpreter and compiler.", "None of the above."], answerText: "Java uses both interpreter and compiler." },
+                { question: "A Java file with extension '.class' contains", options: ["Java source code", "HTML tags", "Java Byte code", "A program file written in Java programming language"], answerText: "Java Byte code" },
+                { question: "Which of the following is not an object-oriented programming paradigm?", options: ["Encapsulation", "Inheritance", "Polymorphism", "Dynamic memory allocation"], answerText: "Dynamic memory allocation" },
+                { question: "Java is a platform independent programming language because", options: ["It compiles an intermediate code targeting a virtual machine, which can be interpreted by an interpreter for a given OS.", "The Java compiler translates the source code directly into the machine-level language.", "It follows the concept of \"write once and compile everywhere\".", "It is written almost similar to the English language."], answerText: "It compiles an intermediate code targeting a virtual machine, which can be interpreted by an interpreter for a given OS." },
+                { question: "Which of the following is not a Language Processor?", options: ["Assembler", "Compiler", "Interpreter", "Fortran"], answerText: "Fortran" },
+                { question: "What is the correct sequence of steps to execute a Java program?", options: ["Run -> Edit -> Compile", "Edit -> Run -> Compile", "Compile -> Edit -> Run", "Edit -> Compile -> Run"], answerText: "Edit -> Compile -> Run" },
+                { question: "What is the primary difference between javac and java commands?", options: ["javac is used to edit Java code, while java runs Java programs.", "javac compiles Java source code to bytecode, while java executes the bytecode on the JVM.", "javac executes Java programs, while java is used for compilation.", "Both are used for compiling Java programs."], answerText: "javac compiles Java source code to bytecode, while java executes the bytecode on the JVM." },
+                { question: "Which of the following is not a feature of Java?", options: ["Platform Independence", "Object-Oriented Programming", "Supports Explicit Pointers", "Supports Polymorphism"], answerText: "Supports Explicit Pointers" },
+                { question: "What does System.in stands for in the above declaration?", options: ["Any file storing data", "Refers to the standard input stream, which is typically the keyboard by default.", "Reference to scanner as an input device", "It is a mouse as an input device"], answerText: "Refers to the standard input stream, which is typically the keyboard by default." },
+                { question: "What is encapsulation in object-oriented programming?", options: ["Hiding implementation details and exposing only functionality", "The process of creating multiple objects in a program", "Writing multiple methods in a single class", "Using the this keyword to reference an object"], answerText: "Hiding implementation details and exposing only functionality" }
+            ],
+            set2026: [
+                { question: "Which of the following is true regarding how Java handles code execution?", options: ["Java uses only interpreter.", "Java uses only compiler.", "Java uses both interpreter and compiler.", "None of the above."], answerText: "Java uses both interpreter and compiler." },
+                { question: "A Java file with extension '.class' contains:", options: ["Java source code", "HTML tags", "Java Byte code", "A program file written in Java programming language"], answerText: "Java Byte code" },
+                { question: "Which of the following is NOT an object-oriented programming paradigm?", options: ["Encapsulation", "Inheritance", "Polymorphism", "Dynamic memory allocation"], answerText: "Dynamic memory allocation" },
+                { question: "Which program is used to compile Java source code into bytecode?", options: ["javap", "javac", "java", "javad"], answerText: "javac" },
+                { question: "In Java, what is the role of the public static void main(String[] args) method?", options: ["Initialization method", "Execution entry point", "Constructor", "Destructor"], answerText: "Execution entry point" },
+                { question: "What is the primary purpose of the Java Virtual Machine (JVM) in the Java programming language?", options: ["Graphical User Interface", "Platform independence", "Code Debugging", "Game Engine"], answerText: "Platform independence" },
+                { question: "How do you read a line of text from the console using the Scanner class in Java?", options: ["scanner.readLine()", "scanner.nextLine()", "scanner.getLine()", "scanner.fetchLine()"], answerText: "scanner.nextLine()" },
+                { question: "Which keyword is used in Java to refer to the current object?", options: ["this", "that", "self", "current"], answerText: "this" },
+                { question: "Which method is used as the starting point of execution in a Java program?", options: ["init method", "start method", "main method", "run method"], answerText: "main method" },
+                { question: "Which symbol is used to end a statement in Java?", options: [":", ".", ";", ","], answerText: ";" }
+            ],
+            setMerged: [
+                { question: "Which of the following is NOT an object-oriented programming paradigm?", options: ["Encapsulation", "Inheritance", "Polymorphism", "Dynamic memory allocation"], answerText: "Dynamic memory allocation" },
+                { question: "What is the correct signature of the main method in Java?", options: ["public static void main(String[] args)", "public void main(String args[])", "void main(String[] args)", "public static void main(Sting [])"], answerText: "public static void main(String[] args)" },
+                { question: "Which of the following is true about constructors in a class?", options: ["Constructors do not have a return type.", "Constructors aren't used to initialize objects.", "A class can have only one constructor.", "Constructors cannot be overloaded."], answerText: "Constructors do not have a return type." },
+                { question: "Which class is used in Java to take runtime data input from the user?", options: ["BufferReader", "UserInputStreamReader", "Scanner", "DataInputStreamReader"], answerText: "Scanner" },
+                { question: "The super() method is used to:", options: ["Call constructor of friend class", "Call constructor of the parent class", "Call constructor", "Is a declared method"], answerText: "Call constructor of the parent class" },
+                { question: "Which type of inheritance leads to the 'Diamond Problem'?", options: ["Single level", "Multi-level", "Multiple", "Hierarchical"], answerText: "Multiple" },
+                { question: "Members of a class which are not intended to be inherited by subclasses should be declared as:", options: ["Public members", "Protected members", "Private members", "Private or Protected members"], answerText: "Private members" },
+                { question: "A package is a collection of:", options: ["Only classes", "Only interfaces", "editing tools", "classes, methods and interfaces"], answerText: "classes, methods and interfaces" },
+                { question: "Which method is used to request that a component be repainted in Java?", options: ["paint()", "repaint()", "update()", "draw()"], answerText: "repaint()" },
+                { question: "Which Swing component is best suited for displaying a drop-down list of selectable options?", options: ["JButton", "JComboBox", "JTextField", "JPanel"], answerText: "JComboBox" }
+            ]
+        };
+
+        // State Variables
+        let currentSetData = [];     // Active questions (full set or just incorrect ones)
+        let incorrectQuestions = []; // Tracks mistakes during the current run
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isSubmitted = false;
+        let currentShuffledOptions = []; // Holds the jumbled options for the current UI
+        let currentActiveSetName = "";
+
+        // DOM Elements
+        const homeScreen = document.getElementById('home-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const actionBtn = document.getElementById('action-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('quiz-progress-text');
+        const scoreCounter = document.getElementById('score-counter');
+        const feedbackBanner = document.getElementById('feedback-banner');
+        const retryIncorrectBtn = document.getElementById('retry-incorrect-btn');
+
+        // Fisher-Yates Shuffle Algorithm for Jumbling Options
+        function shuffleArray(array) {
+            let shuffled = array.slice();
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Initialize a Set
+        function selectSet(setName) {
+            currentActiveSetName = setName;
+            currentSetData = [...setsData[setName]];
+            startQuiz();
+        }
+
+        // Start/Restart Quiz Loop
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            incorrectQuestions = [];
+            
+            homeScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            progressText.classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        // Attempt strictly incorrect questions
+        function retryIncorrect() {
+            currentSetData = [...incorrectQuestions];
+            startQuiz();
+        }
+
+        function loadQuestion() {
+            isSubmitted = false;
+            actionBtn.disabled = true;
+            actionBtn.textContent = "Submit Answer";
+            feedbackBanner.classList.add('hidden');
+            
+            const q = currentSetData[currentQuestionIndex];
+            questionText.textContent = `${currentQuestionIndex + 1}. ${q.question}`;
+            scoreCounter.textContent = `Score: ${score}`;
+            
+            const progressPercent = (currentQuestionIndex / currentSetData.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+            progressText.textContent = `Q ${currentQuestionIndex + 1}/${currentSetData.length}`;
+
+            // Jumble options by places
+            currentShuffledOptions = shuffleArray(q.options);
+
+            optionsContainer.innerHTML = '';
+            currentShuffledOptions.forEach((optText, index) => {
+                const button = document.createElement('button');
+                button.className = "w-full text-left p-4 rounded-xl border border-slate-700/70 bg-slate-800/40 hover:bg-slate-700/50 hover:border-slate-600 transition duration-200 text-slate-200 text-sm sm:text-base flex items-center justify-between group option-btn";
+                button.innerHTML = `<span>${optText}</span><span class="w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center text-xs group-hover:border-indigo-400"></span>`;
+                button.dataset.text = optText;
+                button.onclick = () => selectAnswer(button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectAnswer(selectedElement) {
+            if (isSubmitted) return;
+            
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => {
+                btn.className = "w-full text-left p-4 rounded-xl border border-slate-700/70 bg-slate-800/40 hover:bg-slate-700/50 hover:border-slate-600 transition duration-200 text-slate-200 text-sm sm:text-base flex items-center justify-between group option-btn";
+                btn.classList.remove('selected');
+            });
+            
+            selectedElement.className = "w-full text-left p-4 rounded-xl border border-indigo-500 bg-indigo-600/10 text-indigo-200 text-sm sm:text-base flex items-center justify-between shadow-md option-btn selected";
+            actionBtn.disabled = false;
+        }
+
+        function handleAction() {
+            if (!isSubmitted) {
+                // Check Answer Phase
+                cons
