@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NPTEL Java PYQ Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        button { touch-action: manipulation; }
+        button { outline: none; touch-action: manipulation; transition: transform 0.1s; }
+        button:active { transform: scale(0.98); }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
 
     <!-- Header -->
     <header class="w-full border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
@@ -20,12 +21,17 @@
                 <div class="bg-indigo-600 text-white p-2 rounded-xl font-bold text-lg">📚</div>
                 <span id="header-title" class="font-bold text-lg tracking-tight">Java PYQ Portal</span>
             </div>
-            <div id="quiz-progress-text" class="text-sm font-medium text-slate-400 hidden">Q 1/120</div>
+            <div id="quiz-progress-text" class="text-sm font-medium text-slate-400 hidden">Q 1/10</div>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
+    <main class="w-full max-w-xl mx-auto px-4 py-8 flex-grow flex flex-col justify-center">
+
+        <!-- Error Banner (Failsafe) -->
+        <div id="error-banner" class="hidden bg-rose-600 text-white p-4 rounded-xl mb-6 text-center font-bold">
+            JavaScript failed to load. Please refresh the page.
+        </div>
 
         <!-- Dashboard Screen -->
         <div id="home-screen" class="space-y-6">
@@ -35,25 +41,25 @@
             </div>
             
             <div class="grid gap-4">
-                <button type="button" onclick="selectSet('set2025')" class="w-full text-left p-5 rounded-2xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 transition duration-200 group flex items-center justify-between cursor-pointer active:scale-95">
+                <button id="btn-2025" class="w-full text-left p-5 rounded-2xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 transition duration-200 flex items-center justify-between group">
                     <div>
-                        <div class="font-bold text-lg text-slate-100 group-hover:text-indigo-400 transition">2025 NPTEL Java Set</div>
+                        <div class="font-bold text-lg text-slate-100 group-hover:text-indigo-400">2025 NPTEL Java Set</div>
                         <div class="text-sm text-slate-400 mt-1">Unique assignments from Jan 2025</div>
                     </div>
                     <div class="text-2xl text-indigo-400">▶</div>
                 </button>
 
-                <button type="button" onclick="selectSet('set2026')" class="w-full text-left p-5 rounded-2xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 transition duration-200 group flex items-center justify-between cursor-pointer active:scale-95">
+                <button id="btn-2026" class="w-full text-left p-5 rounded-2xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 transition duration-200 flex items-center justify-between group">
                     <div>
-                        <div class="font-bold text-lg text-slate-100 group-hover:text-indigo-400 transition">2026 NPTEL Java Set</div>
+                        <div class="font-bold text-lg text-slate-100 group-hover:text-indigo-400">2026 NPTEL Java Set</div>
                         <div class="text-sm text-slate-400 mt-1">Unique assignments from Jan 2026</div>
                     </div>
                     <div class="text-2xl text-indigo-400">▶</div>
                 </button>
 
-                <button type="button" onclick="selectSet('setMerged')" class="w-full text-left p-5 rounded-2xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 transition duration-200 group flex items-center justify-between cursor-pointer active:scale-95">
+                <button id="btn-merged" class="w-full text-left p-5 rounded-2xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 transition duration-200 flex items-center justify-between group">
                     <div>
-                        <div class="font-bold text-lg text-slate-100 group-hover:text-indigo-400 transition">Java 7 to 12 Merged Set</div>
+                        <div class="font-bold text-lg text-slate-100 group-hover:text-indigo-400">Java 7 to 12 Merged Set</div>
                         <div class="text-sm text-slate-400 mt-1">Unique questions from merged bank</div>
                     </div>
                     <div class="text-2xl text-indigo-400">▶</div>
@@ -69,12 +75,13 @@
 
             <div class="bg-slate-800/50 border border-slate-700/60 rounded-2xl p-5 sm:p-7 shadow-xl">
                 <h2 id="question-text" class="text-lg sm:text-xl font-semibold mb-6 text-slate-100 leading-snug"></h2>
+                
                 <div id="options-container" class="space-y-3"></div>
                 <div id="feedback-banner" class="mt-4 p-3 rounded-xl text-sm font-medium hidden"></div>
 
                 <div class="mt-8 flex justify-between items-center">
                     <span id="score-counter" class="text-xs sm:text-sm font-medium text-slate-400">Score: 0</span>
-                    <button type="button" id="action-btn" onclick="handleAction()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-6 rounded-xl transition duration-200 shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95" disabled>
+                    <button id="action-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 px-6 rounded-xl transition duration-200 shadow-lg shadow-indigo-600/20 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                         Submit Answer
                     </button>
                 </div>
@@ -93,14 +100,14 @@
             </div>
 
             <div class="flex flex-col gap-3">
-                <button type="button" id="retry-incorrect-btn" onclick="retryIncorrect()" class="hidden w-full bg-rose-600 hover:bg-rose-500 text-white font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg shadow-rose-600/30 cursor-pointer active:scale-95">
+                <button id="retry-incorrect-btn" class="hidden w-full bg-rose-600 hover:bg-rose-500 text-white font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg shadow-rose-600/30">
                     Attempt Incorrect Questions Again
                 </button>
                 <div class="flex flex-col sm:flex-row gap-3">
-                    <button type="button" onclick="viewAnswers()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-3 px-6 rounded-xl transition duration-200 cursor-pointer active:scale-95">
+                    <button id="review-btn" class="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-3 px-6 rounded-xl transition duration-200">
                         Review Answers
                     </button>
-                    <button type="button" onclick="resetToHome()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg shadow-indigo-600/30 cursor-pointer active:scale-95">
+                    <button id="back-home-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-6 rounded-xl transition duration-200 shadow-lg shadow-indigo-600/30">
                         Back to Sets
                     </button>
                 </div>
@@ -111,253 +118,150 @@
         <div id="review-screen" class="hidden space-y-4">
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-xl font-bold">Answer Review</h2>
-                <button type="button" onclick="resetToHome()" class="text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl border border-slate-700 transition cursor-pointer active:scale-95">Back to Home</button>
+                <button id="back-home-review-btn" class="text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl border border-slate-700 transition">Back to Home</button>
             </div>
             <div id="review-container" class="space-y-4 max-h-[65vh] overflow-y-auto pr-1"></div>
         </div>
 
     </main>
 
-    <footer class="w-full text-center py-6 text-xs text-slate-500 border-t border-slate-800">
-        NPTEL Java PYQ Portal &copy; 2026
-    </footer>
-
     <script>
-        console.log("Script initializing...");
+        // Use an event listener to ensure HTML loads completely before attaching JS
+        document.addEventListener('DOMContentLoaded', () => {
 
-        const setsData = {
-            set2025: [
-                { question: "Java is a platform independent programming language because", options: ["It compiles an intermediate code targeting a virtual machine, which can be interpreted by an interpreter for a given OS.", "The Java compiler translates the source code directly into the machine-level language.", "It follows the concept of write once and compile everywhere.", "It is written almost similar to the English language."], answerText: "It compiles an intermediate code targeting a virtual machine, which can be interpreted by an interpreter for a given OS." },
-                { question: "A platform is the hardware or software environment in which a program runs. Which of the following is/are Java platform component(s)?", options: ["HTML", "Java Virtual Machine", "Javascript", "HotJava"], answerText: "Java Virtual Machine" },
-                { question: "What does System.in stands for in the declaration Scanner in = new Scanner(System.in);?", options: ["Any file storing data", "Refers to the standard input stream, which is typically the keyboard by default.", "Reference to scanner as an input device", "It is a mouse as an input device"], answerText: "Refers to the standard input stream, which is typically the keyboard by default." },
-                { question: "What is encapsulation in object-oriented programming?", options: ["Hiding implementation details and exposing only functionality", "The process of creating multiple objects in a program", "Writing multiple methods in a single class", "Using the this keyword to reference an object"], answerText: "Hiding implementation details and exposing only functionality" },
-                { question: "Which of the following is used to take runtime input in Java?", options: ["BufferedReader", "Scanner", "DataInputStream", "All of the above"], answerText: "All of the above" },
-                { question: "Which method is used to format output in Java?", options: ["print()", "println()", "printf()", "format()"], answerText: "printf()" },
-                { question: "Which of the following is true about the super keyword in Java?", options: ["super can be used to call a parent class constructor.", "super is used to access private variables of the parent class.", "super is used to call a static method in the parent class.", "super can only be used inside a static method."], answerText: "super can be used to call a parent class constructor." },
-                { question: "Which of these is NOT an example of method overriding in Java?", options: ["A subclass defining a method with the same name but different parameters than a superclass method.", "A subclass providing a new implementation for a method in the superclass.", "A subclass defining a method with the same name and parameters as a superclass method.", "Using the super keyword to call the superclass version of an overridden method."], answerText: "A subclass defining a method with the same name but different parameters than a superclass method." },
-                { question: "Which access modifier allows a method to be accessible within the same package but not from outside the package?", options: ["default", "private", "public", "protected"], answerText: "default" },
-                { question: "What will happen if you attempt to access a private method from another class in Java?", options: ["The method will be accessible.", "The method will throw an exception.", "The method will be inaccessible.", "The method will be converted to protected."], answerText: "The method will be inaccessible." },
-                { question: "Which of the following is a built-in Java package?", options: ["java.util", "my.package.util", "default.package", "system.java"], answerText: "java.util" },
-                { question: "How do you import a specific class from a package in Java?", options: ["import package.*;", "import package.ClassName;", "include package.ClassName;", "use package.ClassName;"], answerText: "import package.ClassName;" },
-                { question: "Which statement is TRUE regarding abstract class and an interface in Java?", options: ["Abstract classes can contain constructors, but interfaces cannot; Interfaces support multiple inheritance, but abstract classes do not; Abstract classes can have both abstract and concrete methods.", "Interfaces support multiple inheritance, but abstract classes do not only.", "Abstract classes can contain constructors, but interfaces cannot only.", "Abstract classes can have both abstract and concrete methods only."], answerText: "Abstract classes can contain constructors, but interfaces cannot; Interfaces support multiple inheritance, but abstract classes do not; Abstract classes can have both abstract and concrete methods." },
-                { question: "Which of the following is a checked exception in Java?", options:
-            set2026: [
-                { question: "Which symbol is used to end a statement in Java?", options: [":", ".", ";", ","], answerText: ";" },
-                { question: "Which of the following is a valid Java keyword?", options: ["number", "class", "include", "define"], answerText: "class" },
-                { question: "Which method is used as the starting point of execution in a Java program?", options: ["init method", "start method", "main method", "run method"], answerText: "main method" },
-                { question: "Which of the following is used to display output in Java?", options: ["input", "display", "print", "System"], answerText: "print" },
-                { question: "Which keyword is used in Java to refer to the current object?", options: ["this", "that", "self", "current"], answerText: "this" },
-                { question: "How do you read a line of text from the console using the Scanner class in Java?", options: ["scanner.readLine()", "scanner.nextLine()", "scanner.getLine()", "scanner.fetchLine()"], answerText: "scanner.nextLine()" },
-                { question: "Which of the following is the correct way to declare a class in Java?", options: ["public class MyClass {}", "class MyClass[] {}", "public MyClass class {}", "MyClass public class {}"], answerText: "public class MyClass {}" },
-                { question: "In Java, can a subclass in a different package access a superclass's protected method?", options: ["Yes, without any restrictions.", "Yes, but only if they are in the same package.", "No, protected methods are not accessible by subclasses.", "Yes, but only through inheritance (i.e., using super or this, not via an object)"], answerText: "Yes, but only through inheritance (i.e., using super or this, not via an object)" },
-                { question: "What is the process by which we can control what parts of a program can access the members of a class?", options: ["Polymorphism", "Augmentation", "Encapsulation", "Recursion"], answerText: "Encapsulation" },
-                { question: "Which method is used to start a new thread in Java?", options: ["run()", "start()", "execute()", "begin()"], answerText: "start()" },
-                { question: "Which interface must be implemented to create a thread using the Runnable approach?", options: ["Threadable", "Runnable", "Callable", "Executor"], answerText: "Runnable" },
-                { question: "What happens if a thread's run() method completes execution?", options: ["The thread enters the waiting state", "The thread can be restarted", "The thread enters the terminated state", "The thread returns to the runnable state"], answerText: "The thread enters the terminated state" },
-                { question: "Which keyword is used to synchronize a method in Java?", options: ["Lock", "Threadsafe", "Synchronized", "Volatile"], answerText: "Synchronized" },
-                { question: "Which of the following is the default priority of a Java thread?", options: ["1", "3", "5", "2"], answerText: "5" },
-                { question: "Which method causes the currently executing thread to pause for a specified time?", options: ["wait()", "sleep()", "pause()", "delay()"], answerText: "sleep()" },
-                { question: "Which exception is thrown when sleep() is interrupted?", options: ["RuntimeException", "IOException", "InterruptedException", "ThreadException"], answerText: "InterruptedException" },
-                { question: "Which class is used to read text data efficiently from a file in Java?", options: ["FileInputStream", "BufferedReader", "DataInputStream", "ObjectInputStream"], answerText: "BufferedReader" },
-                { question: "Which method is used to read a line of text using BufferedReader?", options: ["read()", "readText()", "readLine()", "getLine()"], answerText: "readLine()" },
-                { question: "Which class is the superclass of all input byte streams in Java?", options: ["Reader", "InputStream", "FileInputStream", "BufferedInputStream"], answerText: "InputStream" },
-                { question: "Which Java package contains networking-related classes?", options: ["java.io", "java.util", "java.net", "java.lang"], answerText: "java.net" },
-                { question: "Which class is used to represent an IP address in Java?", options: ["IPAddress", "InetAddress", "NetAddress", "HostAddress"], answerText: "InetAddress" },
-                { question: "Which method is used to obtain the IP address from an InetAddress object?", options: ["getAddress()", "getIP()", "getHostAddress()", "getNetworkAddress()"], answerText: "getHostAddress()" },
-                { question: "Which protocol is used by Socket in Java for communication?", options: ["UDP", "HTTP", "TCP", "FTP"], answerText: "TCP" },
-                { question: "Which class is used to create a server-side socket in Java?", options: ["Socket", "ClientSocket", "ServerSocket", "NetServer"], answerText: "ServerSocket" },
-                { question: "Which method converts a URI object into a URL object?", options: ["convertURL()", "getURL()", "toURL()", "openURL()"], answerText: "toURL()" },
-                { question: "What value does getPort() return if no port is specified in the URL?", options: ["0", "80", "-1", "443"], answerText: "-1" },
-                { question: "Which protocol is connectionless?", options: ["TCP", "HTTP", "UDP", "SMTP"], answerText: "UDP" },
-                { question: "Which method is used by a client to establish a connection with a server?", options: ["accept()", "connect()", "listen()", "open()"], answerText: "connect()" },
-                { question: "Which layer of the OSI model does TCP belong to?", options: ["Application layer", "Network layer", "Transport layer", "Data link layer"], answerText: "Transport layer" }
-            ],
-            setMerged: [
-                { question: "Which of these values is returned by read() method when the end of file (EOF) is encountered?", options: ["0", "1", "-1", "Null"], answerText: "-1" },
-                { question: "Which stream does Java application uses to only READ data from a source, it may be a file, an array, peripheral device or socket?", options: ["InputStream", "OutputStream", "Input/OutputStream", "DataOutputStream"], answerText: "InputStream" },
-                { question: "Which class in Java is used to create a new directory?", options: ["FileReader", "FileWriter", "File", "Directory"], answerText: "File" },
-                { question: "What is the primary purpose of input streams in Java?", options: ["To write data to a file.", "To read data from a file.", "To delete a file.", "To create directories."], answerText: "To read data from a file." },
-                { question: "Which layout manager arranges components in a rectangular grid?", options: ["FlowLayout", "CardLayout", "BorderLayout", "GridLayout"], answerText: "GridLayout" },
-                { question: "Which method is used to set the title of a Frame in Java?", options: ["setTitle()", "setName()", "setText()", "setLabel()"], answerText: "setTitle()" },
-                { question: "Which layout manager arranges components in a flow, placing them one after another?", options: ["FlowLayout", "BorderLayout", "GridLayout", "CardLayout"], answerText: "FlowLayout" },
-                { question: "Which of the following correctly describes the GUI shown below? (First Name: Last Name:)", options: ["It contains two Labels and one TextField.", "It contains one Frame, two Labels, and two TextFields.", "It contains two Frames, two Labels, and two TextFields.", "It contains one Frame, two Buttons, and two TextFields."], answerText: "It contains one Frame, two Labels, and two TextFields." },
-                { question: "Which of the following is TRUE about a check box in Java?", options: ["A check box cannot be in the on or off state.", "Clicking a check box changes its state between on and off.", "A check box can be on and off at the same time.", "A check box cannot be grouped with other check boxes."], answerText: "Clicking a check box changes its state between on and off." },
-                { question: "Which Swing component is used to display a window?", options: ["JFrame", "JButton", "JLabel", "JTextField"], answerText: "JFrame" },
-                { question: "Which Swing component is used to enter a single line of text?", options: ["JButton", "JLabel", "JTextField", "JPanel"], answerText: "JTextField" },
-                { question: "Which Swing component is commonly used to display non-editable text?", options: ["JLabel", "JButton", "JFrame", "JTextField"], answerText: "JLabel" },
-                { question: "Which JDBC interface is used to execute SQL statements?", options: ["ResultSet", "Statement", "Connection", "DriverManager"], answerText: "Statement" },
-                { question: "Which JDBC object contains the result of a SELECT query?", options: ["Connection", "Statement", "ResultSet", "DriverManager"], answerText: "ResultSet" },
-                { question: "Which protocol is used in the URL https://nptel.ac.in?", options: ["FTP", "HTTP", "HTTPS", "SMTP"], answerText: "HTTPS" },
-                { question: "What does setAutoCommit(false) do?", options: ["commits transaction after each query", "explicitly commits transaction", "does not commit transaction automatically after each query", "never commits transaction"], answerText: "does not commit transaction automatically after each query" },
-                { question: "The following is a statement in Java using JDBC. Connection con = DriverManager.getConnection('jdbc:mysql://localhost:3306/nptel','joy','java'); Which of the following statement is FALSE?", options: ["3306 is the default MySQL port.", "Database name is 'nptel'", "The database server is hosted on IP 127.0.0.1", "Username is 'java' and the password is 'joy'"], answerText: "Username is 'java' and the password is 'joy'" },
-                { question: "What is the correct order to close database resources?", options: ["Connection then Statement then ResultSet", "ResultSet then Statement then Connection", "Statement then Connection then ResultSet", "Statement then ResultSet then Connection"], answerText: "ResultSet then Statement then Connection" },
-                { question: "What is the full form of JDBC?", options: ["Java Database Connectivity", "Java Data Code", "Java Data Communication", "Java Development Connectivity"], answerText: "Java Database Connectivity" },
-                { question: "Which method returns the number of characters in a Java String?", options: ["size()", "length()", "count()", "getSize()"], answerText: "length()" },
-                { question: "Which method is used to get a character at a specified position in a String?", options: ["charAt()", "getChar", "characterAt()", "getAt()"], answerText: "charAt()" },
-                { question: "Which keyword is used to create a subclass in Java?", options: ["implements", "inherits", "extends", "super"], answerText: "extends" },
-                { question: "Which block is executed whether an exception occurs or not?", options: ["try", "catch", "throw", "finally"], answerText: "finally" },
-                { question: "Which keyword is used to explicitly throw an exception in Java?", options: ["throws", "throw", "exception", "catch"], answerText: "throw" },
-                { question: "Which keyword is used to indicate that a method may throw an exception?", options: ["throw", "throws", "try", "finally"], answerText: "throws" },
-                { question: "Which syntax is used to declare an array variable in Java?", options: ["array", "newarray", "int[] arr", "arrayof"], answerText: "int[] arr" },
-                { question: "Which layout manager arranges components in five regions?", options: ["FlowLayout", "BorderLayout", "GridLayout", "BoxLayout"], answerText: "BorderLayout" },
-                { question: "Which method is used to register an ActionListener with a JButton?", options: ["addActionListener()", "addButtonListener()", "setAction()", "registerAction()"], answerText: "addActionListener()" }
-            ]
-        };
+            // ==========================================
+            // EXACT PDF QUESTION BANKS
+            // ==========================================
+            const setsData = {
+                set2025: [
+                    { question: "Java is a platform independent programming language because", options: ["It compiles an intermediate code targeting a virtual machine.", "The Java compiler translates the source code directly into machine-level language.", "It follows the concept of write once and compile everywhere.", "It is written almost similar to the English language."], answerText: "It compiles an intermediate code targeting a virtual machine." },
+                    { question: "A platform is the hardware or software environment in which a program runs. Which of the following is/are Java platform component(s)?", options: ["HTML", "Java Virtual Machine", "Javascript", "HotJava"], answerText: "Java Virtual Machine" },
+                    { question: "What does System.in stands for in the declaration Scanner in = new Scanner(System.in);?", options: ["Any file storing data", "Refers to the standard input stream, which is typically the keyboard by default.", "Reference to scanner as an input device", "It is a mouse as an input device"], answerText: "Refers to the standard input stream, which is typically the keyboard by default." },
+                    { question: "What is encapsulation in object-oriented programming?", options: ["Hiding implementation details and exposing only functionality", "The process of creating multiple objects in a program", "Writing multiple methods in a single class", "Using the this keyword to reference an object"], answerText: "Hiding implementation details and exposing only functionality" },
+                    { question: "Which method is used to format output in Java?", options: ["print()", "println()", "printf()", "format()"], answerText: "printf()" },
+                    { question: "Which of the following is true about the super keyword in Java?", options: ["super can be used to call a parent class constructor.", "super is used to access private variables of the parent class.", "super is used to call a static method in the parent class.", "super can only be used inside a static method."], answerText: "super can be used to call a parent class constructor." },
+                    { question: "Which access modifier allows a method to be accessible within the same package but not from outside the package?", options: ["default", "private", "public", "protected"], answerText: "default" },
+                    { question: "What will happen if you attempt to access a private method from another class in Java?", options: ["The method will be accessible.", "The method will throw an exception.", "The method will be inaccessible.", "The method will be converted to protected."], answerText: "The method will be inaccessible." },
+                    { question: "Which of the following is a checked exception in Java?", options: ["NullPointerException", "ArrayIndexOutOfBoundsException", "IOException", "ArithmeticException"], answerText: "IOException" },
+                    { question: "Which method is used to remove all items from scrolling list in java.awt.list?", options: ["hide()", "remove()", "clear()", "close()"], answerText: "clear()" }
+                ],
+                set2026: [
+                    { question: "Which symbol is used to end a statement in Java?", options: [":", ".", ";", ","], answerText: ";" },
+                    { question: "Which of the following is a valid Java keyword?", options: ["number", "class", "include", "define"], answerText: "class" },
+                    { question: "Which method is used as the starting point of execution in a Java program?", options: ["init method", "start method", "main method", "run method"], answerText: "main method" },
+                    { question: "Which keyword is used in Java to refer to the current object?", options: ["this", "that", "self", "current"], answerText: "this" },
+                    { question: "How do you read a line of text from the console using the Scanner class in Java?", options: ["scanner.readLine()", "scanner.nextLine()", "scanner.getLine()", "scanner.fetchLine()"], answerText: "scanner.nextLine()" },
+                    { question: "Which of the following is the correct way to declare a class in Java?", options: ["public class MyClass {}", "class MyClass[] {}", "public MyClass class {}", "MyClass public class {}"], answerText: "public class MyClass {}" },
+                    { question: "In Java, can a subclass in a different package access a superclass's protected method?", options: ["Yes, without any restrictions.", "Yes, but only if they are in the same package.", "No, protected methods are not accessible by subclasses.", "Yes, but only through inheritance (using super or this)."], answerText: "Yes, but only through inheritance (using super or this)." },
+                    { question: "Which method is used to start a new thread in Java?", options: ["run()", "start()", "execute()", "begin()"], answerText: "start()" },
+                    { question: "Which interface must be implemented to create a thread using the Runnable approach?", options: ["Threadable", "Runnable", "Callable", "Executor"], answerText: "Runnable" },
+                    { question: "Which keyword is used to synchronize a method in Java?", options: ["Lock", "Threadsafe", "Synchronized", "Volatile"], answerText: "Synchronized" }
+                ],
+                setMerged: [
+                    { question: "Which of these values is returned by read() method when the end of file (EOF) is encountered?", options: ["0", "1", "-1", "Null"], answerText: "-1" },
+                    { question: "Which class in Java is used to create a new directory?", options: ["FileReader", "FileWriter", "File", "Directory"], answerText: "File" },
+                    { question: "What is the primary purpose of input streams in Java?", options: ["To write data to a file.", "To read data from a file.", "To delete a file.", "To create directories."], answerText: "To read data from a file." },
+                    { question: "Which layout manager arranges components in a rectangular grid?", options: ["FlowLayout", "CardLayout", "BorderLayout", "GridLayout"], answerText: "GridLayout" },
+                    { question: "Which method is used to set the title of a Frame in Java?", options: ["setTitle()", "setName()", "setText()", "setLabel()"], answerText: "setTitle()" },
+                    { question: "Which Swing component is used to display a window?", options: ["JFrame", "JButton", "JLabel", "JTextField"], answerText: "JFrame" },
+                    { question: "Which Swing component is used to enter a single line of text?", options: ["JButton", "JLabel", "JTextField", "JPanel"], answerText: "JTextField" },
+                    { question: "Which JDBC interface is used to execute SQL statements?", options: ["ResultSet", "Statement", "Connection", "DriverManager"], answerText: "Statement" },
+                    { question: "Which protocol is used in the URL https://nptel.ac.in?", options: ["FTP", "HTTP", "HTTPS", "SMTP"], answerText: "HTTPS" },
+                    { question: "What is the full form of JDBC?", options: ["Java Database Connectivity", "Java Data Code", "Java Data Communication", "Java Development Connectivity"], answerText: "Java Database Connectivity" }
+                ]
+            };
 
-        // State Variables
-        let currentSetData = [];     
-        let incorrectQuestions = []; 
-        let userAnswers = [];        
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let isSubmitted = false;
+            // State Variables
+            let currentSetData = [];     
+            let incorrectQuestions = []; 
+            let userAnswers = [];        
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let isSubmitted = false;
 
-        // DOM Elements
-        const homeScreen = document.getElementById('home-screen');
-        const quizScreen = document.getElementById('quiz-screen');
-        const resultScreen = document.getElementById('result-screen');
-        const reviewScreen = document.getElementById('review-screen');
-        
-        const questionText = document.getElementById('question-text');
-        const optionsContainer = document.getElementById('options-container');
-        const actionBtn = document.getElementById('action-btn');
-        const progressBar = document.getElementById('progress-bar');
-        const progressText = document.getElementById('quiz-progress-text');
-        const scoreCounter = document.getElementById('score-counter');
-        const feedbackBanner = document.getElementById('feedback-banner');
-        const retryIncorrectBtn = document.getElementById('retry-incorrect-btn');
+            // DOM Elements
+            const homeScreen = document.getElementById('home-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultScreen = document.getElementById('result-screen');
+            const reviewScreen = document.getElementById('review-screen');
+            
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const actionBtn = document.getElementById('action-btn');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('quiz-progress-text');
+            const scoreCounter = document.getElementById('score-counter');
+            const feedbackBanner = document.getElementById('feedback-banner');
+            const retryIncorrectBtn = document.getElementById('retry-incorrect-btn');
 
-        // Fisher-Yates Shuffle 
-        function shuffleArray(array) {
-            let shuffled = array.slice();
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            // Attach Event Listeners to Dashboard Buttons
+            document.getElementById('btn-2025').addEventListener('click', () => selectSet('set2025'));
+            document.getElementById('btn-2026').addEventListener('click', () => selectSet('set2026'));
+            document.getElementById('btn-merged').addEventListener('click', () => selectSet('setMerged'));
+            
+            // Attach Event Listeners to Action Buttons
+            actionBtn.addEventListener('click', handleAction);
+            retryIncorrectBtn.addEventListener('click', retryIncorrect);
+            document.getElementById('review-btn').addEventListener('click', viewAnswers);
+            document.getElementById('back-home-btn').addEventListener('click', resetToHome);
+            document.getElementById('back-home-review-btn').addEventListener('click', resetToHome);
+
+            function shuffleArray(array) {
+                let shuffled = array.slice();
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
             }
-            return shuffled;
-        }
 
-        window.selectSet = function(setName) {
-            currentSetData = [...setsData[setName]];
-            startQuiz();
-        };
+            function selectSet(setName) {
+                currentSetData = [...setsData[setName]];
+                startQuiz();
+            }
 
-        window.startQuiz = function() {
-            currentQuestionIndex = 0;
-            score = 0;
-            incorrectQuestions = [];
-            userAnswers = [];
-            
-            homeScreen.classList.add('hidden');
-            resultScreen.classList.add('hidden');
-            reviewScreen.classList.add('hidden');
-            quizScreen.classList.remove('hidden');
-            progressText.classList.remove('hidden');
-            
-            loadQuestion();
-        };
-
-        window.retryIncorrect = function() {
-            currentSetData = [...incorrectQuestions];
-            startQuiz();
-        };
-
-        function loadQuestion() {
-            isSubmitted = false;
-            actionBtn.disabled = true;
-            actionBtn.textContent = "Submit Answer";
-            feedbackBanner.classList.add('hidden');
-            
-            const q = currentSetData[currentQuestionIndex];
-            questionText.textContent = `${currentQuestionIndex + 1}. ${q.question}`;
-            scoreCounter.textContent = `Score: ${score}`;
-            
-            const progressPercent = (currentQuestionIndex / currentSetData.length) * 100;
-            progressBar.style.width = `${progressPercent}%`;
-            progressText.textContent = `Q ${currentQuestionIndex + 1}/${currentSetData.length}`;
-
-            // Jumble options
-            const shuffledOptions = shuffleArray(q.options);
-            optionsContainer.innerHTML = '';
-            
-            shuffledOptions.forEach((optText) => {
-                const button = document.createElement('button');
-                button.type = "button";
-                button.className = "w-full text-left p-4 rounded-xl border border-slate-700/70 bg-slate-800/40 hover:bg-slate-700/50 hover:border-slate-600 transition duration-200 text-slate-200 text-sm sm:text-base flex items-center justify-between group option-btn cursor-pointer";
-                button.innerHTML = `<span>${optText}</span><span class="w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center text-xs group-hover:border-indigo-400"></span>`;
-                button.dataset.text = optText;
-                button.onclick = () => selectAnswer(button);
-                optionsContainer.appendChild(button);
-            });
-        }
-
-        window.selectAnswer = function(selectedElement) {
-            if (isSubmitted) return;
-            
-            const buttons = document.querySelectorAll('.option-btn');
-            buttons.forEach(btn => {
-                btn.className = "w-full text-left p-4 rounded-xl border border-slate-700/70 bg-slate-800/40 hover:bg-slate-700/50 hover:border-slate-600 transition duration-200 text-slate-200 text-sm sm:text-base flex items-center justify-between group option-btn cursor-pointer";
-                btn.classList.remove('selected');
-            });
-            
-            selectedElement.className = "w-full text-left p-4 rounded-xl border border-indigo-500 bg-indigo-600/10 text-indigo-200 text-sm sm:text-base flex items-center justify-between shadow-md option-btn selected cursor-pointer";
-            selectedElement.classList.add('selected');
-            actionBtn.disabled = false;
-        };
-
-        window.handleAction = function() {
-            if (!isSubmitted) {
-                // Check Answer Phase
-                const selectedElement = document.querySelector('.option-btn.selected');
-                if (!selectedElement) return;
+            function startQuiz() {
+                currentQuestionIndex = 0;
+                score = 0;
+                incorrectQuestions = [];
+                userAnswers = [];
                 
-                isSubmitted = true;
+                homeScreen.classList.add('hidden');
+                resultScreen.classList.add('hidden');
+                reviewScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                progressText.classList.remove('hidden');
+                
+                loadQuestion();
+            }
+
+            function retryIncorrect() {
+                currentSetData = [...incorrectQuestions];
+                startQuiz();
+            }
+
+            function loadQuestion() {
+                isSubmitted = false;
+                actionBtn.disabled = true;
+                actionBtn.textContent = "Submit Answer";
+                feedbackBanner.classList.add('hidden');
+                
                 const q = currentSetData[currentQuestionIndex];
-                const selectedText = selectedElement.dataset.text;
-                const isCorrect = (selectedText === q.answerText);
-
-                userAnswers.push({
-                    question: q.question,
-                    options: q.options,
-                    selectedText: selectedText,
-                    correctText: q.answerText,
-                    isCorrect: isCorrect
-                });
-
-                const buttons = document.querySelectorAll('.option-btn');
-
-                if (isCorrect) {
-                    score++;
-                    selectedElement.className = "w-full text-left p-4 rounded-xl border border-emerald-500 bg-emerald-600/20 text-emerald-200 text-sm sm:text-base flex items-center justify-between shadow-md font-semibold option-btn";
-                    feedbackBanner.className = "mt-4 p-3 rounded-xl text-sm font-medium bg-emerald-950/60 border border-emerald-500/50 text-emerald-300";
-                    feedbackBanner.textContent = "Correct! Well done.";
-                } else {
-                    selectedElement.className = "w-full text-left p-4 rounded-xl border border-rose-500 bg-rose-600/20 text-rose-200 text-sm sm:text-base flex items-center justify-between shadow-md font-semibold option-btn";
-                    incorrectQuestions.push(q);
-                    
-                    buttons.forEach(btn => {
-                        if (btn.dataset.text === q.answerText) {
-                            btn.className = "w-full text-left p-4 rounded-xl border border-emerald-500 bg-emerald-600/20 text-emerald-200 text-sm sm:text-base flex items-center justify-between shadow-md font-semibold option-btn";
-                        }
-                    });
-                    
-                    feedbackBanner.className = "mt-4 p-3 rounded-xl text-sm font-medium bg-rose-950/60 border border-rose-500/50 text-rose-300";
-                    feedbackBanner.innerHTML = `<strong>Incorrect!</strong> The correct answer is highlighted in green.`;
-                }
-
+                questionText.textContent = `${currentQuestionIndex + 1}. ${q.question}`;
                 scoreCounter.textContent = `Score: ${score}`;
-                feedbackBanner.classList.remove('hidden');
                 
-                buttons.forEach(btn => btn.disabled = true);
-                actionBtn.textContent = (currentQuestionIndex < currentSetData.length - 1) ? "Next Question" : "Finish Set";
-            } else {
-                currentQuestionIndex++;
-                if (currentQuestionIndex < currentSetData.length) {
-                    loadQuestion();
-                } else {
-                    showResults();
-                }
-            }
-        };
+                const progressPercent = (currentQuestionIndex / currentSetData.length) * 100;
+                progressBar.style.width = `${progressPercent}%`;
+                progressText.textContent = `Q ${currentQuestionIndex + 1}/${currentSetData.length}`;
 
-        window.showResults = function() {
+                // Jumble options
+                const shuffledOptions = shuffleArray(q.options);
+                optionsContainer.innerHTML = '';
+                
+                shuffledOptions.forEach((optText) => {
+                    const button = document.createElement('button');
+                    button.className = "w-full text-left p-4 rounded-xl border border-slate-700/70 bg-slate-800/40 hover:bg-slate-700/50 hover:border-slate-600 transition duration-200 text-slate-200 text-sm sm:text-base flex items-center justify-between group option-btn";
+                    button.innerHTML = `<span>${optText}</span><span class="w-5 h-5 rounded-full border border-slate-600 flex items-center justify-center text-xs group-hover:border-indigo-400"></span>`;
+                    button.dataset.text = optText;
+                    
+ 
